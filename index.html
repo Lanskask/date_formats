@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Date Format Identifier</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 50px;
+      text-align: center;
+    }
+    input {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<h1>Date Format Identifier</h1>
+<p>Enter a date in any common format:</p>
+<input type="text" id="inputDate" placeholder="e.g., 17/11/2024 or November 17, 2024">
+<div id="result"></div>
+
+<script>
+  document.getElementById("inputDate").addEventListener("input", handleDateInput);
+
+  function handleDateInput() {
+    const input = document.getElementById("inputDate").value.trim();
+    const resultElement = document.getElementById("result");
+
+    if (!input) {
+      resultElement.innerText = "";
+      return;
+    }
+
+    const detectedFormat = detectDateFormat(input);
+    displayDetectedFormat(detectedFormat);
+  }
+
+  function detectDateFormat(input) {
+    const formats = [
+      {regex: /^\d{4}-\d{2}-\d{2}$/, format: "YYYY-MM-DD"},
+      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "DD/MM/YYYY"},
+      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "DD-MM-YYYY"},
+      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "DD.MM.YYYY"},
+      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "MM/DD/YY"},
+      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{4}$/, format: "MMMM DD, YYYY"},
+      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{4}$/, format: "DD MMMM YYYY"},
+      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMMM Do, YYYY"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{4}$/, format: "Do MMMM YYYY"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{4}$/, format: "MMM DD, YYYY"},
+      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{4}$/, format: "DD MMM YYYY"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMM Do, YYYY"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{4}$/, format: "Do MMM YYYY"},
+      {regex: /^\d{8}$/, format: "YYYYMMDD"},
+      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "MM-DD-YY"},
+      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "MM.DD.YY"},
+      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "DD/MM/YY"},
+      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "DD-MM-YY"},
+      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "DD.MM.YY"},
+      {regex: /^\d{1,2}\/\d{1,2}\/\d{4}$/, format: "M/D/YYYY"},
+      {regex: /^\d{1,2}-\d{1,2}-\d{4}$/, format: "M-D-YYYY"},
+      {regex: /^\d{1,2}\.\d{1,2}\.\d{4}$/, format: "M.D.YYYY"},
+      {regex: /^\d{1,2}\/\d{1,2}\/\d{2}$/, format: "M/D/YY"},
+      {regex: /^\d{1,2}-\d{1,2}-\d{2}$/, format: "M-D-YY"},
+      {regex: /^\d{1,2}\.\d{1,2}\.\d{2}$/, format: "M.D.YY"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{2}$/, format: "MMM DD, YY"},
+      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{2}$/, format: "DD MMM YY"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMM Do, YY"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{2}$/, format: "Do MMM YY"},
+      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{2}$/, format: "MMMM DD, YY"},
+      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{2}$/, format: "DD MMMM YY"},
+      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMMM Do, YY"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{2}$/, format: "Do MMMM YY"},
+      {regex: /^\d{1,2}\/\d{1,2}\/\d{1,2}$/, format: "M/D/Y"},
+      {regex: /^\d{1,2}-\d{1,2}-\d{1,2}$/, format: "M-D-Y"},
+      {regex: /^\d{1,2}\.\d{1,2}\.\d{1,2}$/, format: "M.D.Y"},
+      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "MM/DD/YYYY"},
+      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "MM-DD-YYYY"},
+      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "MM.DD.YYYY"}
+    ];
+
+    let detectedFormat = "Unknown Format";
+    for (const {regex, format} of formats) {
+      if (regex.test(input)) {
+        detectedFormat = format;
+        break;
+      }
+    }
+    return detectedFormat;
+  }
+
+  function displayDetectedFormat(format) {
+    const resultElement = document.getElementById("result");
+    resultElement.innerText = `Detected Format: ${format}`;
+  }
+</script>
+</body>
+</html>
