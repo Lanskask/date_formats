@@ -49,11 +49,12 @@
   <tbody id="tableBody"></tbody>
 </table>
 
-<script>
-  // @flow
+<script type="module">
+  import { parse, isValid } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.2/esm/index.js';
+
   document.getElementById("inputDate").addEventListener("input", handleDateInput);
 
-  function handleDateInput()/*: void*/ {
+  function handleDateInput() {
     const input/*: string*/ = document.getElementById("inputDate").value.trim();
     const resultElement/*: HTMLElement*/ = document.getElementById("result");
 
@@ -64,81 +65,92 @@
     }
 
     const detectedFormat/*: string*/ = detectDateFormat(input);
-    displayDetectedFormat(detectedFormat, resultElement);
+    displayDetectedFormat(detectedFormat);
     if (detectedFormat !== "Unknown Format") {
-      displayAllFormats(input);
+      displayAllFormats(input, detectedFormat);
     } else {
       document.getElementById("formatTable").style.display = "none";
     }
   }
 
   function detectDateFormat(input/*: string*/)/*: string*/ {
-    const formats = [
-      {regex: /^\d{4}-\d{2}-\d{2}$/, format: "YYYY-MM-DD"},
-      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "DD/MM/YYYY"},
-      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "DD-MM-YYYY"},
-      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "DD.MM.YYYY"},
-      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "MM/DD/YY"},
-      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{4}$/, format: "MMMM DD, YYYY"},
-      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{4}$/, format: "DD MMMM YYYY"},
-      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMMM Do, YYYY"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{4}$/, format: "Do MMMM YYYY"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{4}$/, format: "MMM DD, YYYY"},
-      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{4}$/, format: "DD MMM YYYY"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMM Do, YYYY"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{4}$/, format: "Do MMM YYYY"},
-      {regex: /^\d{8}$/, format: "YYYYMMDD"},
-      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "MM-DD-YY"},
-      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "MM.DD.YY"},
-      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "DD/MM/YY"},
-      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "DD-MM-YY"},
-      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "DD.MM.YY"},
-      {regex: /^\d{1,2}\/\d{1,2}\/\d{4}$/, format: "M/D/YYYY"},
-      {regex: /^\d{1,2}-\d{1,2}-\d{4}$/, format: "M-D-YYYY"},
-      {regex: /^\d{1,2}\.\d{1,2}\.\d{4}$/, format: "M.D.YYYY"},
-      {regex: /^\d{1,2}\/\d{1,2}\/\d{2}$/, format: "M/D/YY"},
-      {regex: /^\d{1,2}-\d{1,2}-\d{2}$/, format: "M-D-YY"},
-      {regex: /^\d{1,2}\.\d{1,2}\.\d{2}$/, format: "M.D.YY"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{2}$/, format: "MMM DD, YY"},
-      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{2}$/, format: "DD MMM YY"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMM Do, YY"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{2}$/, format: "Do MMM YY"},
-      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{2}$/, format: "MMMM DD, YY"},
-      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{2}$/, format: "DD MMMM YY"},
-      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMMM Do, YY"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{2}$/, format: "Do MMMM YY"},
-      {regex: /^\d{1,2}\/\d{1,2}\/\d{1,2}$/, format: "M/D/Y"},
-      {regex: /^\d{1,2}-\d{1,2}-\d{1,2}$/, format: "M-D-Y"},
-      {regex: /^\d{1,2}\.\d{1,2}\.\d{1,2}$/, format: "M.D.Y"},
-      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "MM/DD/YYYY"},
-      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "MM-DD-YYYY"},
-      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "MM.DD.YYYY"}
+    const formats/*: Array<{regex: RegExp, format: string}>*/ = [
+      {regex: /^\d{4}-\d{2}-\d{2}$/, format: "yyyy-MM-dd"},
+      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "dd/MM/yyyy"},
+      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "dd-MM-yyyy"},
+      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "dd.MM.yyyy"},
+      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "MM/dd/yy"},
+      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{4}$/, format: "MMMM dd, yyyy"},
+      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{4}$/, format: "dd MMMM yyyy"},
+      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMMM do, yyyy"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{4}$/, format: "do MMMM yyyy"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{4}$/, format: "MMM dd, yyyy"},
+      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{4}$/, format: "dd MMM yyyy"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMM do, yyyy"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{4}$/, format: "do MMM yyyy"},
+      {regex: /^\d{8}$/, format: "yyyyMMdd"},
+      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "MM-dd-yy"},
+      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "MM.dd.yy"},
+      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "dd/MM/yy"},
+      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "dd-MM-yy"},
+      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "dd.MM.yy"},
+      {regex: /^\d{1,2}\/\d{1,2}\/\d{4}$/, format: "M/d/yyyy"},
+      {regex: /^\d{1,2}-\d{1,2}-\d{4}$/, format: "M-d-yyyy"},
+      {regex: /^\d{1,2}\.\d{1,2}\.\d{4}$/, format: "M.d.yyyy"},
+      {regex: /^\d{1,2}\/\d{1,2}\/\d{2}$/, format: "M/d/yy"},
+      {regex: /^\d{1,2}-\d{1,2}-\d{2}$/, format: "M-d-yy"},
+      {regex: /^\d{1,2}\.\d{1,2}\.\d{2}$/, format: "M.d.yy"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{2}$/, format: "MMM dd, yy"},
+      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{2}$/, format: "dd MMM yy"},
+      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMM do, yy"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{2}$/, format: "do MMM yy"},
+      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{2}$/, format: "MMMM dd, yy"},
+      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{2}$/, format: "dd MMMM yy"},
+      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMMM do, yy"},
+      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{2}$/, format: "do MMMM yy"},
+      {regex: /^\d{1,2}\/\d{1,2}\/\d{1,2}$/, format: "M/d/y"},
+      {regex: /^\d{1,2}-\d{1,2}-\d{1,2}$/, format: "M-d-y"},
+      {regex: /^\d{1,2}\.\d{1,2}\.\d{1,2}$/, format: "M.d.y"},
+      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "MM/dd/yyyy"},
+      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "MM-dd-yyyy"},
+      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "MM.dd.yyyy"}
     ];
 
-    let detectedFormat/*: string*/ = "Unknown Format";
+    let detectedFormat = "Unknown Format";
     for (const {regex, format} of formats) {
       if (regex.test(input)) {
         detectedFormat = format;
+        // todo: this can be optimized with date-fns
+        const parts/*: RegExpMatchArray | null*/ = input.match(regex);
+        if (detectedFormat.includes("MM") && parts) {
+          const month/*: number*/ = parseInt(parts[1], 10);
+          const day/*: number*/ = parseInt(parts[2], 10);
+          if (month > 12 && day > 12) {
+            document.getElementById("result").innerText = "Error: Month cannot be greater than 12.";
+            return "Unknown Format";
+          } else if (month > 12) {
+            detectedFormat = detectedFormat.replace("MM", "DD").replace("DD", "MM");
+          }
+        }
         break;
       }
     }
     return detectedFormat;
   }
 
-  function displayDetectedFormat(format/*: string*/, element/*: HTMLElement*/)/*: void*/ {
-    element.innerText = `Detected Format: ${format}`;
+  function displayDetectedFormat(format/*: string*/)/*: void*/ {
+    const resultElement/*: HTMLElement*/ = document.getElementById("result");
+    resultElement.innerText = `Detected Format: ${format}`;
   }
 
-  function displayAllFormats(input/*: string*/)/*: void*/ {
-    console.log("D1");
-    const date/*: Date*/ = new Date(input);
+  function displayAllFormats(input/*: string*/, detectedFormat/*: string*/) {
+    const date/*: Date*/ = parse(input, detectedFormat, new Date());
+    const resultElement/*: HTMLElement*/ = document.getElementById("result");
     const tableBody/*: HTMLElement*/ = document.getElementById("tableBody");
     const formatTable/*: HTMLElement*/ = document.getElementById("formatTable");
 
-    if (!isNaN(date.getTime())) {
-      console.log("D2");
-      console.log("D2");
-      const formats = [
+    if (isValid(date)) {
+      const formats/*: Array<{label: string, value: string}>*/ = [
         { label: "YYYY-MM-DD", value: date.toISOString().split('T')[0] },
         { label: "DD-MM-YYYY", value: ("0" + date.getDate()).slice(-2) + "-" + ("0" + (date.getMonth() + 1)).slice(-2) + "-" + date.getFullYear() },
         { label: "MM/DD/YYYY", value: ("0" + (date.getMonth() + 1)).slice(-2) + "/" + ("0" + date.getDate()).slice(-2) + "/" + date.getFullYear() },
@@ -155,6 +167,7 @@
 
       formatTable.style.display = "table";
     } else {
+      resultElement.innerText = "Invalid Date";
       formatTable.style.display = "none";
     }
   }
