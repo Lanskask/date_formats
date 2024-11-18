@@ -36,7 +36,7 @@
 <body>
 <h1>Date Format Identifier</h1>
 <p>Enter a date in any common format:</p>
-<input type="text" id="inputDate" placeholder="e.g., 17/11/2024 or November 17, 2024">
+<label for="inputDate"></label><input type="text" id="inputDate" placeholder="e.g., 17/11/2024 or November 17, 2024">
 <div id="result"></div>
 
 <table id="formatTable" style="display: none;">
@@ -49,128 +49,8 @@
   <tbody id="tableBody"></tbody>
 </table>
 
-<script type="module">
-  import { parse, isValid } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.2/esm/index.js';
+<script src="formats.js" type="module"></script>
+<script src="scripts.js" type="module"></script>
 
-  document.getElementById("inputDate").addEventListener("input", handleDateInput);
-
-  function handleDateInput() {
-    const input/*: string*/ = document.getElementById("inputDate").value.trim();
-    const resultElement/*: HTMLElement*/ = document.getElementById("result");
-
-    if (!input) {
-      resultElement.innerText = "";
-      document.getElementById("formatTable").style.display = "none";
-      return;
-    }
-
-    const detectedFormat/*: string*/ = detectDateFormat(input);
-    displayDetectedFormat(detectedFormat);
-    if (detectedFormat !== "Unknown Format") {
-      displayAllFormats(input, detectedFormat);
-    } else {
-      document.getElementById("formatTable").style.display = "none";
-    }
-  }
-
-  function detectDateFormat(input/*: string*/)/*: string*/ {
-    const formats/*: Array<{regex: RegExp, format: string}>*/ = [
-      {regex: /^\d{4}-\d{2}-\d{2}$/, format: "yyyy-MM-dd"},
-      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "dd/MM/yyyy"},
-      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "dd-MM-yyyy"},
-      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "dd.MM.yyyy"},
-      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "MM/dd/yy"},
-      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{4}$/, format: "MMMM dd, yyyy"},
-      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{4}$/, format: "dd MMMM yyyy"},
-      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMMM do, yyyy"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{4}$/, format: "do MMMM yyyy"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{4}$/, format: "MMM dd, yyyy"},
-      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{4}$/, format: "dd MMM yyyy"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{4}$/, format: "MMM do, yyyy"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{4}$/, format: "do MMM yyyy"},
-      {regex: /^\d{8}$/, format: "yyyyMMdd"},
-      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "MM-dd-yy"},
-      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "MM.dd.yy"},
-      {regex: /^\d{2}\/\d{2}\/\d{2}$/, format: "dd/MM/yy"},
-      {regex: /^\d{2}-\d{2}-\d{2}$/, format: "dd-MM-yy"},
-      {regex: /^\d{2}\.\d{2}\.\d{2}$/, format: "dd.MM.yy"},
-      {regex: /^\d{1,2}\/\d{1,2}\/\d{4}$/, format: "M/d/yyyy"},
-      {regex: /^\d{1,2}-\d{1,2}-\d{4}$/, format: "M-d-yyyy"},
-      {regex: /^\d{1,2}\.\d{1,2}\.\d{4}$/, format: "M.d.yyyy"},
-      {regex: /^\d{1,2}\/\d{1,2}\/\d{2}$/, format: "M/d/yy"},
-      {regex: /^\d{1,2}-\d{1,2}-\d{2}$/, format: "M-d-yy"},
-      {regex: /^\d{1,2}\.\d{1,2}\.\d{2}$/, format: "M.d.yy"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2},\s\d{2}$/, format: "MMM dd, yy"},
-      {regex: /^\d{1,2}\s[A-Za-z]{3}\s\d{2}$/, format: "dd MMM yy"},
-      {regex: /^[A-Za-z]{3}\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMM do, yy"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]{3}\s\d{2}$/, format: "do MMM yy"},
-      {regex: /^[A-Za-z]+\s\d{1,2},\s\d{2}$/, format: "MMMM dd, yy"},
-      {regex: /^\d{1,2}\s[A-Za-z]+\s\d{2}$/, format: "dd MMMM yy"},
-      {regex: /^[A-Za-z]+\s\d{1,2}(st|nd|rd|th),\s\d{2}$/, format: "MMMM do, yy"},
-      {regex: /^\d{1,2}(st|nd|rd|th)\s[A-Za-z]+\s\d{2}$/, format: "do MMMM yy"},
-      {regex: /^\d{1,2}\/\d{1,2}\/\d{1,2}$/, format: "M/d/y"},
-      {regex: /^\d{1,2}-\d{1,2}-\d{1,2}$/, format: "M-d-y"},
-      {regex: /^\d{1,2}\.\d{1,2}\.\d{1,2}$/, format: "M.d.y"},
-      {regex: /^\d{2}\/\d{2}\/\d{4}$/, format: "MM/dd/yyyy"},
-      {regex: /^\d{2}-\d{2}-\d{4}$/, format: "MM-dd-yyyy"},
-      {regex: /^\d{2}\.\d{2}\.\d{4}$/, format: "MM.dd.yyyy"}
-    ];
-
-    let detectedFormat = "Unknown Format";
-    for (const {regex, format} of formats) {
-      if (regex.test(input)) {
-        detectedFormat = format;
-        // todo: this can be optimized with date-fns
-        const parts/*: RegExpMatchArray | null*/ = input.match(regex);
-        if (detectedFormat.includes("MM") && parts) {
-          const month/*: number*/ = parseInt(parts[1], 10);
-          const day/*: number*/ = parseInt(parts[2], 10);
-          if (month > 12 && day > 12) {
-            document.getElementById("result").innerText = "Error: Month cannot be greater than 12.";
-            return "Unknown Format";
-          } else if (month > 12) {
-            detectedFormat = detectedFormat.replace("MM", "DD").replace("DD", "MM");
-          }
-        }
-        break;
-      }
-    }
-    return detectedFormat;
-  }
-
-  function displayDetectedFormat(format/*: string*/)/*: void*/ {
-    const resultElement/*: HTMLElement*/ = document.getElementById("result");
-    resultElement.innerText = `Detected Format: ${format}`;
-  }
-
-  function displayAllFormats(input/*: string*/, detectedFormat/*: string*/) {
-    const date/*: Date*/ = parse(input, detectedFormat, new Date());
-    const resultElement/*: HTMLElement*/ = document.getElementById("result");
-    const tableBody/*: HTMLElement*/ = document.getElementById("tableBody");
-    const formatTable/*: HTMLElement*/ = document.getElementById("formatTable");
-
-    if (isValid(date)) {
-      const formats/*: Array<{label: string, value: string}>*/ = [
-        { label: "YYYY-MM-DD", value: date.toISOString().split('T')[0] },
-        { label: "DD-MM-YYYY", value: ("0" + date.getDate()).slice(-2) + "-" + ("0" + (date.getMonth() + 1)).slice(-2) + "-" + date.getFullYear() },
-        { label: "MM/DD/YYYY", value: ("0" + (date.getMonth() + 1)).slice(-2) + "/" + ("0" + date.getDate()).slice(-2) + "/" + date.getFullYear() },
-        { label: "MMMM DD, YYYY", value: date.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) },
-        { label: "DD MMMM YYYY", value: date.toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
-      ];
-
-      tableBody.innerHTML = "";
-      formats.forEach(format => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${format.label}</td><td>${format.value}</td>`;
-        tableBody.appendChild(row);
-      });
-
-      formatTable.style.display = "table";
-    } else {
-      resultElement.innerText = "Invalid Date";
-      formatTable.style.display = "none";
-    }
-  }
-</script>
 </body>
 </html>
